@@ -14,9 +14,9 @@ public class Source
     {
         n_direction => direction;
         n_elevation => elevation;
-        (Math.cos(degreeRad(n_direction))*Math.cos(degreeRad(n_elevation))) => x;
-        (Math.sin(degreeRad(n_direction))*Math.cos(degreeRad(n_elevation))) => y;
-        (Math.sin(degreeRad(n_elevation))) => z;
+        (Math.sin(degreeRad(direction))*Math.cos(degreeRad(elevation))) => x;
+        (Math.cos(degreeRad(direction))*Math.cos(degreeRad(elevation))) => y;
+        (Math.sin(degreeRad(elevation))) => z;
         x => placement.x;
         y => placement.y;
         z => placement.z;
@@ -26,9 +26,9 @@ public class Source
     {
         n_direction => direction;
         n_elevation => elevation;
-        (Math.cos(degreeRad(n_direction))*Math.cos(degreeRad(n_elevation))) => x;
-        (Math.sin(degreeRad(n_direction))*Math.cos(degreeRad(n_elevation))) => y;
-        (Math.sin(degreeRad(n_elevation))) => z;
+        (Math.sin(degreeRad(direction))*Math.cos(degreeRad(elevation))) => x;
+        (Math.cos(degreeRad(direction))*Math.cos(degreeRad(elevation))) => y;
+        (Math.sin(degreeRad(elevation))) => z;
         x => placement.x;
         y => placement.y;
         z => placement.z;

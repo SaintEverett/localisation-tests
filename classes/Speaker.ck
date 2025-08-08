@@ -7,8 +7,8 @@ public class Speaker
 
     fun void Speaker(float direction, float elevation)
     {
-        (Math.cos(degreeRad(direction))*Math.cos(degreeRad(elevation))) => x;
-        (Math.sin(degreeRad(direction))*Math.cos(degreeRad(elevation))) => y;
+        (Math.sin(degreeRad(direction))*Math.cos(degreeRad(elevation))) => x;
+        (Math.cos(degreeRad(direction))*Math.cos(degreeRad(elevation))) => y;
         (Math.sin(degreeRad(elevation))) => z;
         x => placement.x;
         y => placement.y;
@@ -17,8 +17,8 @@ public class Speaker
 
     fun void update(float direction, float elevation)
     {
-        (Math.cos(degreeRad(direction))*Math.cos(degreeRad(elevation))) => x;
-        (Math.sin(degreeRad(direction))*Math.cos(degreeRad(elevation))) => y;
+        (Math.sin(degreeRad(direction))*Math.cos(degreeRad(elevation))) => x;
+        (Math.cos(degreeRad(direction))*Math.cos(degreeRad(elevation))) => y;
         (Math.sin(degreeRad(elevation))) => z;
         x => placement.x;
         y => placement.y;
