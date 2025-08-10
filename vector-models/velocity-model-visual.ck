@@ -4,18 +4,19 @@
 @import "../classes/Speaker.ck"
 @import "../classes/Source.ck"
 
-45.0 => float SOURCE_DIRECTION;
-15.0 => float SOURCE_ELEVATION;
+90.0 => float SOURCE_DIRECTION;
+0.0 => float SOURCE_ELEVATION;
 4 => int BUFFER_SIZE;
 float b_buffer[4][BUFFER_SIZE];
 
 AmbiMath calc;
 Encode1 encode;
+// SawOsc saw;
 SinOsc sine(354.0);
 Gain decode[4][4];
 Gain out[4];
 Speaker speak[4]; // first order, 4 speakers
-Source sound(SOURCE_DIRECTION,SOURCE_ELEVATION); // one sound source with azimuth 45 degrees and zenith 15 degrees
+Source sound(SOURCE_DIRECTION,SOURCE_ELEVATION); // one sound source 
 
 vec3 r_v;
 
@@ -23,9 +24,62 @@ vec3 r_v;
 [0.0, 0.0, 0.0, 0.0] @=> float elevation[]; // zeniths of speakers
 
 float sound_sh[4];
-calc.all(sound.x,sound.y,sound.z,sound_sh,1);
+calc.all(SOURCE_DIRECTION,SOURCE_ELEVATION,sound_sh,1);
 encode.coeff(sound_sh);
 sine => encode => blackhole;
+
+fun void visual()
+{
+    GOrbitCamera cam --> GG.scene();
+    GWindow.mouseMode(GWindow.MouseMode_Disabled);
+    GG.scene().camera(cam);
+    WireframeMaterial wire;
+    wire.thickness(0.02);
+    wire.topology(2);
+    GSphere sphere;
+    GCircle point;
+    point.pos(@(0,0,0));
+    sphere.pos(@(0,0,0));
+    sphere.sca(2.05);
+    sphere.mat(wire);
+    point.color(@(1.0, .427, .76));
+    point.sca(0.225);
+    sphere --> GG.scene();
+    point --> GG.scene();
+
+    while (true) 
+    {
+        point.pos(r_v);
+        point.lookAt(@(0,0,0));
+        GG.nextFrame() => now;
+    }
+}
+
+fun vec3 eulers(vec3 placement)
+{
+    vec3 eulers;
+    // x axis
+    Math.acos((placement.dot(@(1,0,0)))/(placement.magnitude())) => eulers.x;
+    // y axis
+    Math.acos((placement.dot(@(0,1,0)))/(placement.magnitude())) => eulers.y;
+    // z axis
+    Math.acos((placement.dot(@(0,0,1)))/(placement.magnitude())) => eulers.z;
+    return eulers;
+}
+
+fun void rotateSound(Encode1 enc, Source sound)
+{
+    float h;
+    float temp_c[4];
+    while(true)
+    {
+        calc.all(45.0+h, 0.0, temp_c, 1);
+        sound.update(45.0+h, 10.0);
+        enc.coeff(temp_c);
+        0.005 +=> h;
+        GG.nextFrame() => now;
+    }
+}
 
 fun vec3 velocity(Speaker quad[], float pressure[])
 {
@@ -37,8 +91,7 @@ fun vec3 velocity(Speaker quad[], float pressure[])
         pressure[i] +=> bottom;
     }
     if(bottom == 0.0) return @(0,0,0);
-    cherr <= (top * (1.0/(bottom+0.0000000001))) <= IO.newline();
-    return (top * (1.0/(bottom+0.0000000001)));
+    return (top * (1.0/(bottom)));
 }
 
 fun int collector(UGen in, float buffer[])
@@ -64,10 +117,13 @@ for(int i; i < decode.size(); i++)
     for(int j; j < decode[i].size(); j++)
     {
         decode[i][j].gain(temp[j]);
-        cherr <= temp[j] <= " ";
+        // cherr <= temp[j] <= " ";
         encode.chan(j) => decode[i][j] => out[i] => blackhole;
     }
 }
+
+spork ~ visual();
+spork ~ rotateSound(encode, sound);
 
 while(true) 
 {
@@ -77,6 +133,6 @@ while(true)
         out[i].last() => pressures[i];  // Get current sample
     }
     velocity(speak, pressures) @=> r_v;
-    cherr <= "Velocity vector: " <= r_v <= " (magnitude: " <= r_v.magnitude() <= ")" <= IO.newline();
+    // cherr <= "Velocity vector: " <= r_v <= " (magnitude: " <= r_v.magnitude() <= ")" <= IO.newline();
     1::samp => now;
 }
