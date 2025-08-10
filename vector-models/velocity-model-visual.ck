@@ -10,9 +10,10 @@
 float b_buffer[4][BUFFER_SIZE];
 
 AmbiMath calc;
-Encode1 encode;
-// SawOsc saw;
-SinOsc sine(354.0);
+Encode1 encode[2];
+SinOsc sine(354.0)[2];
+sine[1].freq(578.0);
+Gain scale(1.0/(sine.size()+sine.size()))[sine.size()];
 Gain decode[4][4];
 Gain out[4];
 Speaker speak[4]; // first order, 4 speakers
@@ -23,11 +24,14 @@ vec3 r_v;
 [45.0, 135.0, 225.0, 315.0] @=> float direction[]; // azimuths of speakers
 [0.0, 0.0, 0.0, 0.0] @=> float elevation[]; // zeniths of speakers
 
-float sound_sh[4];
-calc.all(SOURCE_DIRECTION,SOURCE_ELEVATION,sound_sh,1);
-encode.coeff(sound_sh);
-sine => encode => blackhole;
+float sound_sh[2][4];
+calc.all(SOURCE_DIRECTION,SOURCE_ELEVATION,sound_sh[0],1);
+calc.all(SOURCE_DIRECTION+45.0, SOURCE_ELEVATION, sound_sh[1], 1);
+encode[0].coeff(sound_sh[0]);
+encode[1].coeff(sound_sh[1]);
 
+sine[0] => scale[0] => encode[0] => blackhole;
+// sine[1] => scale[1] => encode[1] => blackhole;
 fun void visual()
 {
     GOrbitCamera cam --> GG.scene();
@@ -46,10 +50,12 @@ fun void visual()
     point.sca(0.225);
     sphere --> GG.scene();
     point --> GG.scene();
+    vec3 swap; // since in ambisonics, the y axis is forwards, and z upwards. swapping y for z is only done to fix the visual
 
     while (true) 
     {
-        point.pos(r_v);
+        @(r_v.x,r_v.z,r_v.y) @=> swap;
+        point.pos(swap);
         point.lookAt(@(0,0,0));
         GG.nextFrame() => now;
     }
@@ -118,12 +124,13 @@ for(int i; i < decode.size(); i++)
     {
         decode[i][j].gain(temp[j]);
         // cherr <= temp[j] <= " ";
-        encode.chan(j) => decode[i][j] => out[i] => blackhole;
+        encode[0].chan(j) => decode[i][j] => out[i] => blackhole;
+        encode[1].chan(j) => decode[i][j] => out[i] => blackhole;
     }
 }
 
 spork ~ visual();
-spork ~ rotateSound(encode, sound);
+// spork ~ rotateSound(encode[0], sound);
 
 while(true) 
 {
